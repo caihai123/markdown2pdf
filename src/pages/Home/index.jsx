@@ -1,0 +1,78 @@
+import { useState } from "react";
+import Editor from "@/components/Editor/index";
+import { SplitPane, Pane } from "react-split-pane";
+import Header from "./components/Header";
+import Footer from "./components/Footer";
+import readme from "/README.md";
+import "./split-pane.css";
+import { useRef } from "react";
+import markdownit from "markdown-it";
+import hljs from "highlight.js";
+
+const md = markdownit({
+  html: true,
+  highlight: function (str, lang) {
+    if (lang && hljs.getLanguage(lang)) {
+      try {
+        return (
+          '<pre><code class="hljs">' +
+          hljs.highlight(str, { language: lang, ignoreIllegals: true }).value +
+          "</code></pre>"
+        );
+        // eslint-disable-next-line no-unused-vars
+      } catch (_) {
+        return (
+          '<pre><code class="hljs">' +
+          md.utils.escapeHtml(str) +
+          "</code></pre>"
+        );
+      }
+    }
+  },
+});
+
+export default function Home() {
+  const [resizeing, setResizeing] = useState();
+
+  const iframeRef = useRef(null);
+
+  const updateIframePreview = function (value) {
+    const html = md.render(value);
+    iframeRef.current?.contentWindow.postMessage({
+      type: "content",
+      data: html,
+    });
+  };
+
+  return (
+    <section>
+      <Header />
+      <main style={{ height: "calc(100vh - 110px)" }}>
+        <SplitPane
+          direction="horizontal"
+          onResizeStart={() => setResizeing(true)}
+          onResizeEnd={() => setResizeing(false)}
+        >
+          <Pane>
+            <Editor defaultValue={readme} onChange={updateIframePreview} />
+          </Pane>
+          <Pane
+            minSize={400}
+            maxSize={980}
+            defaultSize="600px"
+            style={{ overflow: "hidden" }}
+          >
+            <iframe
+              ref={iframeRef}
+              src="/preview.html"
+              className={resizeing ? "pointer-events-disabled" : ""}
+              style={{ border: "none", width: "100%", height: "100%" }}
+              onLoad={() => updateIframePreview(readme)}
+            />
+          </Pane>
+        </SplitPane>
+      </main>
+      <Footer />
+    </section>
+  );
+}

@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en" style="width: 100%; height: 100%">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- 禁用捏合缩放 -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"
+    />
+  </head>
+  <body
+    style="
+      margin: 0;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      overscroll-behavior-x: none;
+    "
+    role="document"
+  >
+    <script async type="module">
+      const getActiveFrame = () => {
+        return /** @type {HTMLIFrameElement | undefined} */ (
+          document.getElementById("active-frame")
+        );
+      };
+
+      const getPendingFrame = () => {
+        return /** @type {HTMLIFrameElement | undefined} */ (
+          document.getElementById("pending-frame")
+        );
+      };
+
+      function assertIsDefined(obj) {
+        if (typeof obj === "undefined" || obj === null) {
+          throw new Error("Found unexpected null");
+        }
+        return obj;
+      }
+
+      function onDomReady(callback) {
+        if (
+          document.readyState === "interactive" ||
+          document.readyState === "complete"
+        ) {
+          callback();
+        } else {
+          document.addEventListener("DOMContentLoaded", callback);
+        }
+      }
+
+      let loadTimeout;
+
+      onDomReady(() => {
+        if (!document.body) {
+          return;
+        }
+
+        window.addEventListener(
+          "message",
+          (event) => {
+            const { type, data } = event.data;
+            if (type === "content") {
+              const newDocument = data;
+              const frame = getActiveFrame();
+              const previousPendingFrame = getPendingFrame();
+              if (previousPendingFrame) {
+                previousPendingFrame.setAttribute("id", "");
+                previousPendingFrame.remove();
+              }
+              const newFrame = document.createElement("iframe");
+              newFrame.src = `./fake.html`;
+              newFrame.title = "预览 Markdown";
+              newFrame.setAttribute("id", "pending-frame");
+              newFrame.setAttribute("frameborder", "0");
+              newFrame.style.cssText =
+                "display: block; margin: 0; overflow: hidden; position: absolute; width: 100%; height: 100%; visibility: hidden";
+              document.body.appendChild(newFrame);
+
+              function onFrameLoaded(contentDocument) {
+                setTimeout(() => {
+                  contentDocument.open();
+                  contentDocument.write(
+                    `<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Fake</title><link rel="stylesheet" href="/github-markdown-light.css" ><link rel="stylesheet" href="/github-highlight.css"><style>.markdown-body {box-sizing: border-box;min-width: 200px;max-width: 980px;margin: 0 auto;padding: 15px;}</style></head><body class="markdown-body">${newDocument}</body></html>`
+                  );
+                  contentDocument.close();
+                  hookupOnLoadHandlers(newFrame);
+                }, 0);
+              }
+
+              assertIsDefined(newFrame.contentWindow).addEventListener(
+                "DOMContentLoaded",
+                (e) => {
+                  const contentDocument = e.target
+                    ? /** @type {HTMLDocument} */ (e.target)
+                    : undefined;
+                  onFrameLoaded(assertIsDefined(contentDocument));
+                }
+              );
+
+              function hookupOnLoadHandlers(newFrame) {
+                clearTimeout(loadTimeout);
+                loadTimeout = undefined;
+                loadTimeout = setTimeout(() => {
+                  clearTimeout(loadTimeout);
+                  loadTimeout = undefined;
+                  onLoad(
+                    assertIsDefined(newFrame.contentDocument),
+                    assertIsDefined(newFrame.contentWindow)
+                  );
+                }, 200);
+
+                const contentWindow = assertIsDefined(newFrame.contentWindow);
+
+                contentWindow.addEventListener("load", function (e) {
+                  const contentDocument = /** @type {Document} */ (e.target);
+
+                  if (loadTimeout) {
+                    clearTimeout(loadTimeout);
+                    loadTimeout = undefined;
+                    onLoad(contentDocument, this);
+                  }
+                });
+              }
+
+              const onLoad = (contentDocument, contentWindow) => {
+                const newFrame = getPendingFrame();
+                if (
+                  newFrame &&
+                  newFrame.contentDocument &&
+                  newFrame.contentDocument === contentDocument
+                ) {
+                  const wasFocused = document.hasFocus();
+                  const oldActiveFrame = getActiveFrame();
+                  oldActiveFrame?.remove();
+
+                  newFrame.setAttribute("id", "active-frame");
+                  newFrame.style.visibility = "visible";
+                }
+              };
+            }
+          },
+          false
+        );
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,48 @@
+.split-pane-divider {
+    background: #ccc;
+    position: relative
+}
+
+.split-pane-divider:before {
+    content: "";
+    position: absolute;
+    background: transparent;
+    z-index: 999;
+}
+
+.split-pane-divider:hover:before,.split-pane-divider.dragging:before {
+    background: #1976d2
+}
+
+.split-pane-divider:focus {
+    outline: 2px solid #1976d2;
+    outline-offset: -1px
+}
+
+.split-pane-divider.horizontal {
+    width: 1px;
+    cursor: col-resize
+}
+
+.split-pane-divider.horizontal:before {
+    top: 0;
+    bottom: 0;
+    left: -2px;
+    right: -2px
+}
+
+.split-pane-divider.vertical {
+    height: 1px;
+    cursor: row-resize
+}
+
+.split-pane-divider.vertical:before {
+    left: 0;
+    right: 0;
+    top: -2px;
+    bottom: -2px
+}
+
+.pointer-events-disabled {
+  pointer-events: none !important;
+}
