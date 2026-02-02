@@ -1,6 +1,6 @@
 .split-pane-divider {
     background: #ccc;
-    position: relative
+    position: relative;
 }
 
 .split-pane-divider:before {
@@ -10,8 +10,13 @@
     z-index: 999;
 }
 
+.split-pane-divider::before,.split-pane-divider:before{
+    transition-delay: 0s; /* 鼠标移出时立即恢复 */
+}
+
 .split-pane-divider:hover:before,.split-pane-divider.dragging:before {
-    background: #1976d2
+    background-color: #1976d2;
+    transition-delay: 0.3s; /* 鼠标放上去延迟 0.5s */
 }
 
 .split-pane-divider:focus {
