@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Editor from "@/components/Editor/index";
 import { SplitPane, Pane } from "react-split-pane";
 import Header from "./components/Header";
@@ -32,17 +32,39 @@ const md = markdownit({
 });
 
 export default function Home() {
+  const iframeRef = useRef(null);
+
   const [resizeing, setResizeing] = useState();
 
-  const iframeRef = useRef(null);
+  const port2 = useRef();
 
   const updateIframePreview = function (value) {
     const html = md.render(value);
-    iframeRef.current?.contentWindow.postMessage({
-      type: "content",
-      data: html,
+    port2.current?.postMessage({
+      channel: "content",
+      args: html,
     });
   };
+
+  useEffect(() => {
+    const handleMessage = (event) => {
+      if (event.ports && event.ports[0]) {
+        port2.current = event.ports[0];
+
+        // port2.current.onmessage = (e) => {
+        //   console.log("通过 port2 收到消息:", e.data);
+        // };
+
+        updateIframePreview(readme);
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+
+    return () => {
+      window.removeEventListener("message", handleMessage);
+    };
+  }, []);
 
   return (
     <section>
@@ -67,7 +89,6 @@ export default function Home() {
               src="/preview.html"
               className={resizeing ? "pointer-events-disabled" : ""}
               style={{ border: "none", width: "100%", height: "100%" }}
-              onLoad={() => updateIframePreview(readme)}
             />
           </Pane>
         </SplitPane>
