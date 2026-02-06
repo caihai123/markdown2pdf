@@ -31,29 +31,55 @@ const md = markdownit({
   },
 });
 
+const HostMessaging = class {
+  constructor(port2) {
+    this.port2 = port2;
+
+    this.handlers = new Map();
+
+    this.port2.onmessage = (e) => {
+      const channel = e.data.channel;
+      const handlers = this.handlers.get(channel);
+      if (handlers) {
+        for (const handler of handlers) {
+          handler(e, e.data.data);
+        }
+      } else {
+        console.log("no handler for ", e);
+      }
+    };
+  }
+
+  postMessage(channel, data, transfer) {
+    this.port2.postMessage({ channel, data }, transfer);
+  }
+
+  onMessage(channel, handler) {
+    let handlers = this.handlers.get(channel);
+    if (!handlers) {
+      handlers = [];
+      this.handlers.set(channel, handlers);
+    }
+    handlers.push(handler);
+  }
+};
+
 export default function Home() {
   const iframeRef = useRef(null);
 
   const [resizeing, setResizeing] = useState();
 
-  const port2 = useRef();
+  const hostMessaging = useRef();
 
   const updateIframePreview = function (value) {
     const html = md.render(value);
-    port2.current?.postMessage({
-      channel: "content",
-      args: html,
-    });
+    hostMessaging.current?.postMessage("content", html);
   };
 
   useEffect(() => {
     const handleMessage = (event) => {
       if (event.ports && event.ports[0]) {
-        port2.current = event.ports[0];
-
-        // port2.current.onmessage = (e) => {
-        //   console.log("通过 port2 收到消息:", e.data);
-        // };
+        hostMessaging.current = new HostMessaging(event.ports[0]);
 
         updateIframePreview(readme);
       }

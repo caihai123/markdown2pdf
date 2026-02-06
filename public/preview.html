@@ -65,7 +65,7 @@
             const handlers = this.handlers.get(channel);
             if (handlers) {
               for (const handler of handlers) {
-                handler(e, e.data.args);
+                handler(e, e.data.data);
               }
             } else {
               console.log("no handler for ", e);
