@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import Box from "@mui/material/Box";
+import Toolbar from "@mui/material/Toolbar";
 import Editor from "@/components/Editor/index";
 import { SplitPane, Pane } from "react-split-pane";
 import Header from "./components/Header";
@@ -97,9 +99,10 @@ export default function Home() {
   }, []);
 
   return (
-    <section>
-      <Header />
-      <main style={{ height: "calc(100vh - 110px)" }}>
+    <Box display="flex" flexDirection="column" height="100vh">
+      <Header onPrint={() => hostMessaging.current?.postMessage("print")} />
+      <Toolbar />
+      <Box component="main" flex={1}>
         <SplitPane
           direction="horizontal"
           onResizeStart={() => setResizeing(true)}
@@ -121,8 +124,8 @@ export default function Home() {
             />
           </Pane>
         </SplitPane>
-      </main>
+      </Box>
       <Footer />
-    </section>
+    </Box>
   );
 }

@@ -1,7 +1,10 @@
+import Box from "@mui/material/Box";
+
 export default function Footer() {
   return (
-    <footer
-      style={{
+    <Box
+      component="footer"
+      sx={{
         padding: "12px 0",
         borderTop: "1px solid #ccc",
         fontSize: 14,
@@ -18,6 +21,6 @@ export default function Footer() {
         <span style={{ padding: "0 5px", color: "#e5e0d8" }}>❤️</span> by Cai
         Hai
       </div>
-    </footer>
+    </Box>
   );
 }

@@ -7,26 +7,24 @@ import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 
-export default function Header() {
+export default function Header(props) {
   return (
-    <header style={{ height: 64 }}>
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            markdown2pdf
-          </Typography>
+    <AppBar>
+      <Toolbar>
+        <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+          markdown2pdf
+        </Typography>
 
-          <Divider />
+        <Divider />
 
-          <List>
-            <ListItem disablePadding>
-              <ListItemButton sx={{ textAlign: "center" }}>
-                <ListItemText primary={"关于"} />
-              </ListItemButton>
-            </ListItem>
-          </List>
-        </Toolbar>
-      </AppBar>
-    </header>
+        <List>
+          <ListItem disablePadding>
+            <ListItemButton sx={{ textAlign: "center" }}>
+              <ListItemText primary={"打印"} onClick={props.onPrint} />
+            </ListItemButton>
+          </ListItem>
+        </List>
+      </Toolbar>
+    </AppBar>
   );
 }
