@@ -1,9 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import styles from "./style.module.css";
 import "./userWorker";
 
-export default function Editor(props) {
+const Editor = forwardRef(function (props, ref) {
   const editorRef = useRef(null);
   const containerRef = useRef(null);
 
@@ -29,8 +29,14 @@ export default function Editor(props) {
         },
       });
 
+      // 内容变化时触发
       editorRef.current.onDidChangeModelContent(() => {
         props.onChange?.(editorRef.current.getValue());
+      });
+
+      // 滚动条位置变化时触发
+      editorRef.current.onDidScrollChange((...args) => {
+        props.onDidScrollChange?.(...args);
       });
     }
 
@@ -40,5 +46,12 @@ export default function Editor(props) {
     };
   });
 
+  useImperativeHandle(ref, () => ({
+    // 更新滚动条位置
+    setScrollTop: (...args) => editorRef.current?.setScrollTop(...args),
+  }));
+
   return <div className={styles.editor} ref={containerRef} />;
-}
+});
+
+export default Editor;
