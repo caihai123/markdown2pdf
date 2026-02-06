@@ -8,6 +8,9 @@ import "./split-pane.css";
 import { useRef } from "react";
 import markdownit from "markdown-it";
 import hljs from "highlight.js";
+import { full as emoji } from "markdown-it-emoji"; // 表情符号
+import footnote from "markdown-it-footnote"; // 注脚
+import katex from "@vscode/markdown-it-katex"; // 数学公式
 
 const md = markdownit({
   html: true,
@@ -29,7 +32,10 @@ const md = markdownit({
       }
     }
   },
-});
+})
+  .use(emoji /* , options */)
+  .use(footnote)
+  .use(katex);
 
 const HostMessaging = class {
   constructor(port2) {
@@ -65,9 +71,7 @@ const HostMessaging = class {
 };
 
 export default function Home() {
-  const iframeRef = useRef(null);
-
-  const [resizeing, setResizeing] = useState();
+  const [resizeing, setResizeing] = useState(); // 是否在拖动
 
   const hostMessaging = useRef();
 
@@ -111,7 +115,6 @@ export default function Home() {
             style={{ overflow: "hidden" }}
           >
             <iframe
-              ref={iframeRef}
               src="/preview.html"
               className={resizeing ? "pointer-events-disabled" : ""}
               style={{ border: "none", width: "100%", height: "100%" }}
