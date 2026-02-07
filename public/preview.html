@@ -212,6 +212,12 @@
         });
       });
 
+      // 接收打印命令
+      hostMessaging.onMessage("print", (_event, progress) => {
+        const frame = getActiveFrame();
+        frame.contentWindow.print();
+      });
+
       // 获取初始滚动位置（此代码应该是处理先滚动再打开预览的情况，本系统没有此种情况，所以不做处理）
       // hostMessaging.onMessage("initial-scroll-position", (_event, progress) => {
       //   initData.initialScrollProgress = progress;
