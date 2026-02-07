@@ -1,13 +1,13 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Home from "/src/pages/Home";
-// import About from "/src/pages/About";
+import Home from "@/pages/Home";
+import About from "@/pages/About";
 
 const App = () => {
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
         <Route path="/" element={<Home />} />
-        {/* <Route path="/about" element={<About />} /> */}
+        <Route path="/about" element={<About />} />
       </Routes>
     </BrowserRouter>
   );
