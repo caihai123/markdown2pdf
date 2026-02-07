@@ -47,7 +47,7 @@ $$
 * 提供多主题切换，适应不同阅读和打印需求（目前仅支持github默认主题）
 
 # 技术
-[markdown-it]()
+[markdown-it](https://github.com/markdown-it/markdown-it)
 
 [github-syntax-light](https://github.com/primer/github-syntax-light)
 
