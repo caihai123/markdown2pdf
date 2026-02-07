@@ -85,6 +85,10 @@ export default function Home() {
 
   useEffect(() => {
     const handleMessage = (event) => {
+      const { origin } = new URL(location.toString());
+      if (event.origin !== origin) {
+        return;
+      }
       if (event.ports && event.ports[0]) {
         hostMessaging.current = new HostMessaging(event.ports[0]);
 

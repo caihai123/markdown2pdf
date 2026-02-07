@@ -87,7 +87,8 @@
         }
 
         signalReady() {
-          window.parent.postMessage(null, "*", [this.channel.port2]);
+          const origin = new URL(location.toString()).origin;
+          window.parent.postMessage(null, origin, [this.channel.port2]);
         }
       })();
 
