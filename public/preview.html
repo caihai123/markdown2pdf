@@ -245,7 +245,6 @@
             assertIsDefined(newFrame.contentWindow).addEventListener(
               "DOMContentLoaded",
               (e) => {
-                console.log("执行了DOMContentLoaded");
                 const contentDocument = e.target
                   ? /** @type {HTMLDocument} */ (e.target)
                   : undefined;
