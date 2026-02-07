@@ -19,6 +19,13 @@
     role="document"
   >
     <script async type="module">
+      const isSafari =
+        navigator.vendor &&
+        navigator.vendor.indexOf("Apple") > -1 &&
+        navigator.userAgent &&
+        navigator.userAgent.indexOf("CriOS") === -1 &&
+        navigator.userAgent.indexOf("FxiOS") === -1;
+
       const getActiveFrame = () => {
         return /** @type {HTMLIFrameElement | undefined} */ (
           document.getElementById("active-frame")
@@ -219,15 +226,33 @@
             }, 0);
           }
 
-          assertIsDefined(newFrame.contentWindow).addEventListener(
-            "DOMContentLoaded",
-            (e) => {
-              const contentDocument = e.target
-                ? /** @type {HTMLDocument} */ (e.target)
-                : undefined;
-              onFrameLoaded(assertIsDefined(contentDocument));
-            }
-          );
+          if (isSafari) {
+            // 在 Safari中的srcdoc模式下，DOMContentLoaded似乎永远不会执行
+            const interval = setInterval(() => {
+              // If the frame is no longer mounted, loading has stopped
+              if (!newFrame.parentElement) {
+                clearInterval(interval);
+                return;
+              }
+
+              const contentDocument = assertIsDefined(newFrame.contentDocument);
+              if (contentDocument.readyState !== "loading") {
+                clearInterval(interval);
+                onFrameLoaded(contentDocument);
+              }
+            }, 20);
+          } else {
+            assertIsDefined(newFrame.contentWindow).addEventListener(
+              "DOMContentLoaded",
+              (e) => {
+                console.log("执行了DOMContentLoaded");
+                const contentDocument = e.target
+                  ? /** @type {HTMLDocument} */ (e.target)
+                  : undefined;
+                onFrameLoaded(assertIsDefined(contentDocument));
+              }
+            );
+          }
 
           function hookupOnLoadHandlers(newFrame) {
             clearTimeout(loadTimeout);
@@ -259,7 +284,16 @@
 
           const onLoad = (contentDocument, contentWindow) => {
             if (contentDocument && contentDocument.body) {
-              setInitialScrollPosition(contentDocument.body, contentWindow);
+              if (isSafari) {
+                // 未知原因在 Safari 中滚动会失效，必须强制重排后才会恢复
+                const body = contentDocument.body;
+                body.style.overflow = "hidden";
+                body.offsetHeight; // 强制 reflow
+                body.style.overflow = "auto";
+              }
+              requestAnimationFrame(() => {
+                setInitialScrollPosition(contentDocument.body, contentWindow);
+              });
             }
             const newFrame = getPendingFrame();
             if (
