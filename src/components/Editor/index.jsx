@@ -27,6 +27,9 @@ const Editor = forwardRef(function (props, ref) {
           top: 24,
           bottom: 24,
         },
+        find: {
+          addExtraSpaceOnTop: false,
+        },
       });
 
       // 内容变化时触发
