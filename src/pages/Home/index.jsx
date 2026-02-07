@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
 import Editor from "@/components/Editor/index";
-import { SplitPane, Pane } from "react-split-pane";
+import { SplitPane, Pane, usePersistence } from "react-split-pane";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import readme from "/README.md";
@@ -73,6 +73,7 @@ const HostMessaging = class {
 };
 
 export default function Home() {
+  const [sizes, setSizes] = usePersistence({ key: "my-layout" });
   const [resizeing, setResizeing] = useState(); // 是否在拖动
 
   const hostMessaging = useRef();
@@ -105,14 +106,19 @@ export default function Home() {
       <Box component="main" flex={1}>
         <SplitPane
           direction="horizontal"
+          onResize={setSizes}
           onResizeStart={() => setResizeing(true)}
           onResizeEnd={() => setResizeing(false)}
           style={{ overflow: "visible" }}
         >
-          <Pane style={{ position: "static", overflow: "visible" }}>
+          <Pane
+            size={sizes[0]}
+            style={{ position: "static", overflow: "visible" }}
+          >
             <Editor defaultValue={readme} onChange={updateIframePreview} />
           </Pane>
           <Pane
+            size={sizes[1]}
             minSize={400}
             maxSize={980}
             defaultSize="600px"
