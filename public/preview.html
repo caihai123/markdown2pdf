@@ -134,6 +134,29 @@
         }
       };
 
+      // 处理中键点击
+      const handleAuxClick = (event) => {
+        // Prevent middle clicks opening a broken link in the browser
+        if (!event?.view?.document) {
+          return;
+        }
+
+        if (event.button === 1) {
+          for (const pathElement of event.composedPath()) {
+            /** @type {any} */
+            const node = pathElement;
+            if (
+              node.tagName &&
+              node.tagName.toLowerCase() === "a" &&
+              node.href
+            ) {
+              event.preventDefault();
+              return;
+            }
+          }
+        }
+      };
+
       onDomReady(() => {
         if (!document.body) {
           return;
@@ -230,6 +253,7 @@
             });
 
             contentWindow.addEventListener("click", handleInnerClick);
+            contentWindow.addEventListener("auxclick", handleAuxClick);
           }
 
           const onLoad = (contentDocument, contentWindow) => {
