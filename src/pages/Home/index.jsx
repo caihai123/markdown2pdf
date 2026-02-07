@@ -107,15 +107,16 @@ export default function Home() {
           direction="horizontal"
           onResizeStart={() => setResizeing(true)}
           onResizeEnd={() => setResizeing(false)}
+          style={{ overflow: "visible" }}
         >
-          <Pane>
+          <Pane style={{ position: "static", overflow: "visible" }}>
             <Editor defaultValue={readme} onChange={updateIframePreview} />
           </Pane>
           <Pane
             minSize={400}
             maxSize={980}
             defaultSize="600px"
-            style={{ overflow: "hidden" }}
+            style={{ position: "static", overflow: "visible" }}
           >
             <iframe
               src="/preview.html"
