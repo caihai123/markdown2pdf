@@ -24,26 +24,25 @@ export default function Header(props) {
 
         <List>
           <ListItem disablePadding>
-            <ListItemButton sx={{ textAlign: "center" }}>
-              <Button variant="contained" onClick={props.onPrint}>
-                打印
-              </Button>
+            <Button variant="contained" sx={{ mr: 2 }} onClick={props.onPrint}>
+              打印
+            </Button>
+            <ListItemButton
+              sx={{ textAlign: "center" }}
+              onClick={() => navigate("/about")}
+            >
+              <ListItemText primary={"关于"} />
             </ListItemButton>
-            <ListItemButton sx={{ textAlign: "center" }}>
-              <ListItemText
-                primary={"关于"}
-                onClick={() => navigate("/about")}
-              />
-            </ListItemButton>
-            <ListItemButton sx={{ textAlign: "center" }}>
-              <GitHubIcon
-                onClick={() =>
-                  window.open(
-                    "https://github.com/caihai123/markdown2pdf",
-                    "_blank"
-                  )
-                }
-              />
+            <ListItemButton
+              sx={{ textAlign: "center" }}
+              onClick={() =>
+                window.open(
+                  "https://github.com/caihai123/markdown2pdf",
+                  "_blank"
+                )
+              }
+            >
+              <GitHubIcon />
             </ListItemButton>
           </ListItem>
         </List>
