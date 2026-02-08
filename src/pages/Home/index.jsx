@@ -100,7 +100,7 @@ export default function Home() {
             style={{ position: "static", overflow: "visible" }}
           >
             <iframe
-              src="/preview.html"
+              src={`${import.meta.env.BASE_URL}/preview.html`}
               className={resizeing ? "pointer-events-disabled" : ""}
               style={{ border: "none", width: "100%", height: "100%" }}
             />

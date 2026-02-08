@@ -212,7 +212,7 @@
             previousPendingFrame.remove();
           }
           const newFrame = document.createElement("iframe");
-          newFrame.srcdoc = `<html lang="zh_ch"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="stylesheet" href="/github-markdown-light.css" ><link rel="stylesheet" href="/github-highlight.css"><style>.markdown-body {box-sizing: border-box;min-width: 200px;max-width: 980px;margin: 0 auto;padding: 15px;}</style></head><body class="markdown-body">${newDocument}</body></html>`;
+          newFrame.srcdoc = `<html lang="zh_ch"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="stylesheet" href="./github-markdown-light.css" ><link rel="stylesheet" href="./github-highlight.css"><style>.markdown-body {box-sizing: border-box;min-width: 200px;max-width: 980px;margin: 0 auto;padding: 15px;}</style></head><body class="markdown-body">${newDocument}</body></html>`;
           newFrame.title = "预览 Markdown";
           newFrame.setAttribute("id", "pending-frame");
           newFrame.setAttribute("frameborder", "0");

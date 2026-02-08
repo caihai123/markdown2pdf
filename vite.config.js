@@ -4,6 +4,7 @@ import markdownRawPlugin from "vite-raw-plugin";
 
 // https://vite.dev/config/
 export default defineConfig({
+  base: "/markdown2pdf/",
   plugins: [
     react({
       babel: {
