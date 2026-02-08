@@ -26,7 +26,7 @@ export default function About() {
 
   return (
     <iframe
-      src="/preview.html"
+      src={`${import.meta.env.BASE_URL}/preview.html`}
       style={{ border: "none", width: "100%", height: "100vh" }}
     />
   );
