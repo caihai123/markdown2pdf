@@ -96,7 +96,7 @@ export default function Home() {
             size={sizes[1]}
             minSize={400}
             maxSize={980}
-            defaultSize="600px"
+            defaultSize="50%"
             style={{ position: "static", overflow: "visible" }}
           >
             <iframe
