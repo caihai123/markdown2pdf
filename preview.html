@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en" style="width: 100%; height: 100%">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- 禁用捏合缩放 -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"
+    />
+  </head>
+  <body
+    style="
+      margin: 0;
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      overscroll-behavior-x: none;
+    "
+    role="document"
+  >
+    <script async type="module">
+      const isSafari =
+        navigator.vendor &&
+        navigator.vendor.indexOf("Apple") > -1 &&
+        navigator.userAgent &&
+        navigator.userAgent.indexOf("CriOS") === -1 &&
+        navigator.userAgent.indexOf("FxiOS") === -1;
+
+      const getActiveFrame = () => {
+        return /** @type {HTMLIFrameElement | undefined} */ (
+          document.getElementById("active-frame")
+        );
+      };
+
+      const getPendingFrame = () => {
+        return /** @type {HTMLIFrameElement | undefined} */ (
+          document.getElementById("pending-frame")
+        );
+      };
+
+      function assertIsDefined(obj) {
+        if (typeof obj === "undefined" || obj === null) {
+          throw new Error("Found unexpected null");
+        }
+        return obj;
+      }
+
+      function onDomReady(callback) {
+        if (
+          document.readyState === "interactive" ||
+          document.readyState === "complete"
+        ) {
+          callback();
+        } else {
+          document.addEventListener("DOMContentLoaded", callback);
+        }
+      }
+
+      const initData = {
+        initialScrollProgress: undefined,
+      };
+
+      const hostMessaging = new (class HostMessaging {
+        constructor() {
+          this.channel = new MessageChannel();
+
+          /** @type {Map<string, Array<(event: MessageEvent, data: any) => void>>} */
+          this.handlers = new Map();
+
+          this.channel.port1.onmessage = (e) => {
+            const channel = e.data.channel;
+            const handlers = this.handlers.get(channel);
+            if (handlers) {
+              for (const handler of handlers) {
+                handler(e, e.data.data);
+              }
+            } else {
+              console.log("no handler for ", e);
+            }
+          };
+        }
+
+        postMessage(channel, data, transfer) {
+          this.channel.port1.postMessage({ channel, data }, transfer);
+        }
+
+        onMessage(channel, handler) {
+          let handlers = this.handlers.get(channel);
+          if (!handlers) {
+            handlers = [];
+            this.handlers.set(channel, handlers);
+          }
+          handlers.push(handler);
+        }
+
+        signalReady() {
+          const origin = new URL(location.toString()).origin;
+          window.parent.postMessage(null, origin, [this.channel.port2]);
+        }
+      })();
+
+      // state
+      let firstLoad = true;
+      let loadTimeout;
+
+      // 处理内部点击
+      const handleInnerClick = (event) => {
+        if (!event?.view?.document) {
+          return;
+        }
+
+        const baseElement = event.view.document.querySelector("base");
+
+        for (const pathElement of event.composedPath()) {
+          /** @type {any} */
+          const node = pathElement;
+          if (node.tagName && node.tagName.toLowerCase() === "a" && node.href) {
+            if (node.getAttribute("href") === "#") {
+              event.view.scrollTo(0, 0);
+            } else if (
+              node.hash &&
+              (node.getAttribute("href") === node.hash ||
+                (baseElement && node.href === baseElement.href + node.hash))
+            ) {
+              const fragment = node.hash.slice(1);
+              const decodedFragment = decodeURIComponent(fragment);
+              const scrollTarget =
+                event.view.document.getElementById(fragment) ??
+                event.view.document.getElementById(decodedFragment);
+              if (scrollTarget) {
+                scrollTarget.scrollIntoView();
+              } else if (decodedFragment.toLowerCase() === "top") {
+                event.view.scrollTo(0, 0);
+              }
+            } else {
+              const url = node.href.baseVal || node.href;
+              event.view.open(url, "_blank", "noopener,noreferrer");
+            }
+            event.preventDefault();
+            return;
+          }
+        }
+      };
+
+      // 处理中键点击
+      const handleAuxClick = (event) => {
+        // Prevent middle clicks opening a broken link in the browser
+        if (!event?.view?.document) {
+          return;
+        }
+
+        if (event.button === 1) {
+          for (const pathElement of event.composedPath()) {
+            /** @type {any} */
+            const node = pathElement;
+            if (
+              node.tagName &&
+              node.tagName.toLowerCase() === "a" &&
+              node.href
+            ) {
+              event.preventDefault();
+              return;
+            }
+          }
+        }
+      };
+
+      onDomReady(() => {
+        if (!document.body) {
+          return;
+        }
+
+        // 接收父页面传递的内容
+        hostMessaging.onMessage("content", (_event, data) => {
+          const newDocument = data;
+          const frame = getActiveFrame();
+
+          const wasFirstLoad = firstLoad;
+          // 保留当前的 ​​scrollY 值以便稍后使用
+          /** @type {(body: HTMLElement, window: Window) => void} */
+          let setInitialScrollPosition;
+          if (firstLoad) {
+            firstLoad = false;
+            setInitialScrollPosition = (body, window) => {
+              if (
+                typeof initData.initialScrollProgress === "number" &&
+                !isNaN(initData.initialScrollProgress)
+              ) {
+                if (window.scrollY === 0) {
+                  window.scroll(
+                    0,
+                    body.clientHeight * initData.initialScrollProgress
+                  );
+                }
+              }
+            };
+          } else {
+            const scrollY =
+              frame && frame.contentDocument && frame.contentDocument.body
+                ? assertIsDefined(frame.contentWindow).scrollY
+                : 0;
+            setInitialScrollPosition = (body, window) => {
+              if (window.scrollY === 0) {
+                window.scroll(0, scrollY);
+              }
+            };
+          }
+
+          const previousPendingFrame = getPendingFrame();
+          if (previousPendingFrame) {
+            previousPendingFrame.setAttribute("id", "");
+            previousPendingFrame.remove();
+          }
+          const newFrame = document.createElement("iframe");
+          newFrame.srcdoc = `<html lang="zh_ch"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><link rel="stylesheet" href="./github-markdown-light.css" ><link rel="stylesheet" href="./github-highlight.css"><style>.markdown-body {box-sizing: border-box;min-width: 200px;max-width: 980px;margin: 0 auto;padding: 15px;}</style></head><body class="markdown-body">${newDocument}</body></html>`;
+          newFrame.title = "预览 Markdown";
+          newFrame.setAttribute("id", "pending-frame");
+          newFrame.setAttribute("frameborder", "0");
+          newFrame.style.cssText =
+            "display: block; margin: 0; overflow: hidden; position: absolute; width: 100%; height: 100%; visibility: hidden;";
+          document.body.appendChild(newFrame);
+
+          function onFrameLoaded(contentDocument) {
+            setTimeout(() => {
+              hookupOnLoadHandlers(newFrame);
+            }, 0);
+          }
+
+          if (isSafari) {
+            // 在 Safari中的srcdoc模式下，DOMContentLoaded似乎永远不会执行
+            const interval = setInterval(() => {
+              // If the frame is no longer mounted, loading has stopped
+              if (!newFrame.parentElement) {
+                clearInterval(interval);
+                return;
+              }
+
+              const contentDocument = assertIsDefined(newFrame.contentDocument);
+              if (contentDocument.readyState !== "loading") {
+                clearInterval(interval);
+                onFrameLoaded(contentDocument);
+              }
+            }, 20);
+          } else {
+            assertIsDefined(newFrame.contentWindow).addEventListener(
+              "DOMContentLoaded",
+              (e) => {
+                const contentDocument = e.target
+                  ? /** @type {HTMLDocument} */ (e.target)
+                  : undefined;
+                onFrameLoaded(assertIsDefined(contentDocument));
+              }
+            );
+          }
+
+          function hookupOnLoadHandlers(newFrame) {
+            clearTimeout(loadTimeout);
+            loadTimeout = undefined;
+            loadTimeout = setTimeout(() => {
+              clearTimeout(loadTimeout);
+              loadTimeout = undefined;
+              onLoad(
+                assertIsDefined(newFrame.contentDocument),
+                assertIsDefined(newFrame.contentWindow)
+              );
+            }, 200);
+
+            const contentWindow = assertIsDefined(newFrame.contentWindow);
+
+            contentWindow.addEventListener("load", function (e) {
+              const contentDocument = /** @type {Document} */ (e.target);
+
+              if (loadTimeout) {
+                clearTimeout(loadTimeout);
+                loadTimeout = undefined;
+                onLoad(contentDocument, this);
+              }
+            });
+
+            contentWindow.addEventListener("click", handleInnerClick);
+            contentWindow.addEventListener("auxclick", handleAuxClick);
+          }
+
+          const onLoad = (contentDocument, contentWindow) => {
+            if (contentDocument && contentDocument.body) {
+              if (isSafari) {
+                // 未知原因在 Safari 中滚动会失效，必须强制重排后才会恢复
+                const body = contentDocument.body;
+                body.style.overflow = "hidden";
+                body.offsetHeight; // 强制 reflow
+                body.style.overflow = "auto";
+              }
+              requestAnimationFrame(() => {
+                setInitialScrollPosition(contentDocument.body, contentWindow);
+              });
+            }
+            const newFrame = getPendingFrame();
+            if (
+              newFrame &&
+              newFrame.contentDocument &&
+              newFrame.contentDocument === contentDocument
+            ) {
+              const wasFocused = document.hasFocus();
+              const oldActiveFrame = getActiveFrame();
+              oldActiveFrame?.remove();
+
+              newFrame.setAttribute("id", "active-frame");
+              newFrame.style.visibility = "visible";
+            }
+          };
+        });
+      });
+
+      // 接收打印命令
+      hostMessaging.onMessage("print", (_event, progress) => {
+        const frame = getActiveFrame();
+        frame.contentWindow.print();
+      });
+
+      // 获取初始滚动位置（此代码应该是处理先滚动再打开预览的情况，本系统没有此种情况，所以不做处理）
+      // hostMessaging.onMessage("initial-scroll-position", (_event, progress) => {
+      //   initData.initialScrollProgress = progress;
+      // });
+
+      hostMessaging.signalReady();
+    </script>
+  </body>
+</html>
